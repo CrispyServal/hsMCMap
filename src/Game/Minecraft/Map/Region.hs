@@ -50,6 +50,9 @@ mapTuple2 f (x,y) = (f x, f y)
 -- ChunkRaw length type_of_compression data(compressed NBT)
 data ChunkRaw = ChunkRaw Word32 Word8 B.ByteString deriving Show
 
+getRawNBT :: ChunkRaw -> B.ByteString
+getRawNBT (ChunkRaw _ _ b) = b
+
 chunkPaser :: Parser ChunkRaw
 chunkPaser = do
 	len <- anyWord32be

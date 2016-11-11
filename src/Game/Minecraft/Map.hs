@@ -3,22 +3,27 @@ module Game.Minecraft.Map where
 
 import Game.Minecraft.Map.NBT
 import Game.Minecraft.Map.Block
+import Game.Minecraft.Map.Region
 
 import System.Directory
 import System.IO
 import System.Environment
 
 import Data.Word
+import Data.Int
 import Data.List
+import qualified Data.ByteString as B
 import Data.Maybe
 import Data.Bits
 import System.Directory
 
 import Control.Applicative
 
+import Debug.Trace
+
 data Chunk = Chunk XPos ZPos [[(Word8,Word8)]] deriving (Eq,Show)
-type XPos = Int
-type ZPos = Int
+type XPos = Int32 
+type ZPos = Int32
 data ChunkTop = ChunkTop
                 {
                     getTopX ::  XPos,
@@ -56,31 +61,26 @@ splitData s = concat $ map sp s where
     sp w = [w `shiftR` 4 , w .&. 0x0F]
 
 
--- region folder path -> 
---loadRegions :: String -> IO [[ChunkTop]]
+loadRegions :: String -> IO [[ChunkTop]]
 loadRegions path = do
-	regions <- filter (isSuffixOf "mca") <$> getDirectoryContents path
-	print regions
+	rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
+	contents <- sequence $ map (B.readFile .((path ++ "/") ++ )) rFiles
+	let r = (pure $ map (toTopView . buildChunk . getNBT . getRawNBT)) <*> (map getChunkRaws contents)
+	return r
+	
+-- {Y} rename this plz
+-- {Y} yypFun :: [[ChunkTop]] -> [Word8]
+-- ...
 
+-- usage ./main "a region folder"
 main :: IO ()
 main = do 
+	print "starting"
 	[testArg] <- getArgs
-	loadRegions testArg
+	-- {Y} rs :: [[ChunkTop]]
+	rs <- loadRegions testArg
+	-- {Y} let yypRes = yypFunk rs
+	-- {Y} print yypRes
+	-- print rs
+	print "done"
 
--- test for nbt
-{--
-test f = do
-    --[a1] <- getArgs
-    exist <- doesFileExist f
-    if exist then do
-        content <- B.readFile f
-        let
-            chunks = getChunkRaws content
-            nbts = map (\(ChunkRaw _ _ c) -> getNBT c ) chunks
-        do
-            print $ length chunks
-            --writeFile "nbts.debug" (show nbts)
-            writeFile "test.out" (show $ ( map (toTopView.buildChunk) nbts) )
-	else
-	    print $ "empty"
---}
