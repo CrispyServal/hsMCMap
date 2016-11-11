@@ -81,6 +81,6 @@ main = do
 	rs <- loadRegions testArg
 	-- {Y} let yypRes = yypFunk rs
 	-- {Y} print yypRes
-	-- print rs
+	print rs
 	print "done"
 

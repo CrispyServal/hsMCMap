@@ -44,23 +44,32 @@ build-type:          Simple
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version: >= 1.10
 
+Flag Debug
+    Description: enable debug: profiler
+    Manual:      True
+    Default:     False
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Game.Minecraft.Map, Game.Minecraft.Map.Block, Game.Minecraft.Map.NBT, Game.Minecraft.Map.Region
+  exposed-modules:     Game.Minecraft.Map, Game.Minecraft.Map.NBT, Game.Minecraft.Map.Region
   
   -- Modules included in this library but not exported.
-  -- other-modules:       
+  other-modules:       Game.Minecraft.Map.Block
   
+  --cabal-version: >= 1.10
   -- Other library packages from which modules are imported.
   build-depends:       base ==4.*, directory ==1.2.*, containers ==0.5.*, bytestring ==0.10.*, zlib ==0.6.*, attoparsec-binary ==0.2.*, attoparsec ==0.13.*, data-binary-ieee754 ==0.4.*
   
   -- Directories containing source files.
   hs-source-dirs:      src
+  default-language:    Haskell2010
 
-executable crc
+executable main
   main-is:             Main.hs
   hs-source-dirs:      exc-src
   build-depends:       base == 4.*
+                    ,  mc-map
   default-language:    Haskell2010
   GHC-Options:         -Wall -O2
+  if flag(debug)
+    GHC-Options:       -Wall -O2 -prof -auto-all -caf-all -fforce-recomp
