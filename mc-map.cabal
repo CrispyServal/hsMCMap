@@ -6,20 +6,20 @@ name:                mc-map
 
 -- The package version.  See the Haskell package versioning policy (PVP) 
 -- for standards guiding when and how versions should be incremented.
--- https://wiki.haskell.org/Package_versioning_policy
+-- http://www.haskell.org/haskellwiki/Package_versioning_policy
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
 version:             0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis:            read mc region file and output world map, including NBT parser.
+synopsis:            nil
 
 -- A longer description of the package.
 -- description:         
 
 -- URL for the project homepage or repository.
-homepage:            Nil
+homepage:            nil
 
 -- The license under which the package is released.
 license:             GPL-3
@@ -28,7 +28,7 @@ license:             GPL-3
 license-file:        LICENSE
 
 -- The package author(s).
-author:              nalleyer
+author:              nalleyer,yyp
 
 -- An email address to which users can send suggestions, bug reports, and 
 -- patches.
@@ -41,30 +41,26 @@ category:            Game
 
 build-type:          Simple
 
--- Extra files to be distributed with the package, such as examples or a 
--- README.
-extra-source-files:  ChangeLog.md
-
 -- Constraint on the version of Cabal needed to build this package.
-cabal-version:       >=1.10
+cabal-version: >= 1.10
 
 
-executable mc-map
-  -- .hs or .lhs file containing the Main module.
-  main-is:             Main.hs
+library
+  -- Modules exported by the library.
+  exposed-modules:     Game.Minecraft.Map, Game.Minecraft.Map.Block, Game.Minecraft.Map.NBT, Game.Minecraft.Map.Region
   
-  -- Modules included in this executable, other than Main.
+  -- Modules included in this library but not exported.
   -- other-modules:       
   
-  -- LANGUAGE extensions used by modules in this package.
-  other-extensions:    OverloadedStrings
-  
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.9 && <4.10, directory >=1.2 && <1.3, attoparsec-binary >=0.2 && <0.3, attoparsec >=0.13 && <0.14, bytestring >=0.10 && <0.11, zlib >=0.6 && <0.7, data-binary-ieee754 >=0.4 && <0.5, containers >=0.5 && <0.6, JuicyPixels >=3.2 && <3.3
+  build-depends:       base ==4.*, directory ==1.2.*, containers ==0.5.*, bytestring ==0.10.*, zlib ==0.6.*, attoparsec-binary ==0.2.*, attoparsec ==0.13.*, data-binary-ieee754 ==0.4.*
   
   -- Directories containing source files.
   hs-source-dirs:      src
-  
-  -- Base language which the package is written in.
+
+executable crc
+  main-is:             Main.hs
+  hs-source-dirs:      exc-src
+  build-depends:       base == 4.*
   default-language:    Haskell2010
-  
+  GHC-Options:         -Wall -O2
