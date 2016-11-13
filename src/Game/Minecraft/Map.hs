@@ -79,7 +79,36 @@ loadRegions path = do
 	
 -- {Y} rename this plz
 -- {Y} yypFun :: [[ChunkTop]] -> [Word8]
--- ...
+yypFun :: [ChunkTop] -> (Int32, Int32, [Word8])
+yypFun chunkTopGroup =(height, width, unfoldMap (insertMap (getSize chunkTopGroup) chunkTopGroup))  
+    where
+        getSize :: [ChunkTop] -> (Int32, Int32, Int32, Int32)
+        getSize chunkTopGroup =(maximum xlist, minimum xlist, maximum zlist, minimum zlist)
+            where 
+                xlist = map getTopX chunkTopGroup
+                zlist = map getTopZ chunkTopGroup
+        getHW :: (Int32, Int32, Int32, Int32) -> (Int32, Int32)
+        getHW (xmax, xmin, zmax, zmin) =(xmax - xmin + 1, zmax - zmin + 1)
+        (height, width) = getHW . getSize $ chunkTopGroup
+        defaultChunk = replicate 16 $ replicate 16  $ replicate 4 (0::Word8)
+        insertMap :: (Int32, Int32, Int32, Int32) -> [ChunkTop]->[[[[[Word8]]]]]
+        insertMap (xmax, xmin, zmax, zmin) chunkTopGroup = [[insertOneChunk (xnow, znow) | xnow <- [xmin..xmax]] | znow <- [zmin..zmax]]
+            where
+                insertOneChunk :: (Int32, Int32) -> [[[Word8]]]
+                insertOneChunk (x, z)
+                    | length (findChunk x z) > 0 =make2D 16 $ map getBlockColor $ getTopData $ head $ findChunk x z
+                    | otherwise =defaultChunk
+                    where
+                        findChunk x z = [chunk |chunk <- chunkTopGroup, getTopX chunk == x, getTopZ chunk == z]
+        unfoldMap :: [[[[[Word8]]]]] -> [Word8]
+        unfoldMap chunkGroup =concat $ map unfoldRow chunkGroup
+            where
+                unfoldRow :: [[[[Word8]]]] -> [Word8]
+                unfoldRow chunkRow = concat $ unfold chunkRow 16 []
+                    where
+                        unfold :: [[[[Word8]]]] -> Int -> [[Word8]] -> [[Word8]]
+                        unfold chunkRow 0 result =result
+                        unfold chunkRow num result =unfold [tail chunk | chunk <- chunkRow] (num - 1) (result ++ concat [head chunk| chunk <- chunkRow])    
 
 -- usage ./main "a region folder"
 main :: IO ()
@@ -88,8 +117,8 @@ main = do
 	[testArg] <- getArgs
 	-- {Y} rs :: [[ChunkTop]]
 	rs <- loadRegions testArg
-	-- {Y} let yypRes = yypFunk rs
-	-- {Y} print yypRes
-	print rs
+	let yypRes = yypFun rs
+	print yypRes
+	--print rs
 	print "done"
 
