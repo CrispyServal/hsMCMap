@@ -19,7 +19,6 @@ import Data.Bits
 import System.Directory
 
 import Control.Applicative
---import Control.Parallel.Strategies
 
 import Debug.Trace
 
@@ -48,7 +47,6 @@ toTopView (Chunk x z bs) = ChunkTop x z (myFoldl' ref e $ reverse bs) where
         | allDraw e = e
         | otherwise =   let e' = e `f` x
                         in seq e' $ myFoldl' f e' xs
-    --ref lows highs = zipWith refT lows highs
     ref highs lows = zipWith refT highs lows
     refT high low
         | ifDraw high = high

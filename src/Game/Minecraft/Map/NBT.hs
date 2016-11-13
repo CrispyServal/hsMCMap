@@ -12,15 +12,11 @@ import Data.Binary.Get
 import Control.Applicative
 import Control.Monad
 
----------------------------
--- NBT
----------------------------
-
 type Name = BL.ByteString
 data NBT = NBT Name Content
 	deriving (Eq,Show)
 
-data Content = TAG_End						-- 0
+data Content = TAG_End					-- 0
 	| TAG_Byte			Word8 			-- 1
 	| TAG_Short			Word16 			-- 2
 	| TAG_Int			Word32 			-- 3
@@ -38,18 +34,12 @@ data Content = TAG_End						-- 0
 -- ignore tag id at start(must be 10)
 getNBT :: BL.ByteString -> NBT
 getNBT bs = runGet (byte >> nbtGet 10) (Z.decompress bs)
-				--case result of
-					--(Right nbt, _)	-> nbt
-					--(Left err, _)	-> error err
-
 
 -- NOTE: no id parsing here. will be in compound and in start(getNBT)
 nbtGet :: Word8 -> Get NBT
 nbtGet id = do
 	lenName <- short
-	--traceM $ ("nbtGet: len: " ++ show lenName ++ "\n") 
 	name 	<- BL.pack <$> (replicateM . fromIntegral) lenName byte
-	--traceM $ ("nbtGet: name: " ++ show name ++ "\n") 
 	content <- tag id
 	return ( NBT name content )
 
@@ -82,23 +72,15 @@ short 	= getWord16be
 int 	= getWord32be
 long 	= getWord64be
 float 	= getFloat32be
---float 	= wordToFloat <$> getWord32be
 double 	= getFloat64be
---double 	= wordToDouble <$> getWord64be
 compound :: Get [NBT]
 compound = do
 	id <- byte
-	--traceM $ ("com id: " ++ show id ++ "\n") 
 	case id of
 		0 -> return []
 		_ -> (:) <$> nbtGet id <*> compound
-	--if id == 0 then
-		--return []
-	--else do
-		--(:) <$> nbtGet id <*> compound
 
 -- useful functions for reading data NBT
---
 nameNBT :: NBT -> BL.ByteString
 nameNBT (NBT n _) = n
 

@@ -2,15 +2,7 @@ module Game.Minecraft.Map.Region where
 
 import Game.Minecraft.Map.NBT
 
---import System.Directory
---import System.IO
---import System.Environment
-
---import Data.Attoparsec.Binary
---import Data.Attoparsec
-
 import Data.Binary.Get
-
 import Data.Word
 import Data.List
 import Data.Either
@@ -29,7 +21,6 @@ type TimeStamp = Word32
 
 data Header = Header [Location] [TimeStamp] deriving Show
 
---headGet :: Get Header
 headGet :: Get Header
 headGet = do
 	l <- replicateM 1024 location
@@ -61,7 +52,6 @@ chunkGet :: Get ChunkRaw
 chunkGet = do
 	len <- getWord32be
 	t 	<- getWord8
-	--bs 	<- B.pack <$> (replicateM . fromIntegral) (len-1) getWord8
 	bs 	<- getLazyByteString $ fromIntegral (len-1)
 	return $ ChunkRaw len t bs
 
