@@ -1,5 +1,5 @@
 module Game.Minecraft.Map.Block where
-import qualified Data.IntMap as I
+import qualified Data.IntMap.Strict as I
 import Data.Bits
 import Data.Word
 data BlockInfo = BlockInfo {    toDrawBlock :: Bool
@@ -13,8 +13,11 @@ ifDraw (id, add) = toDrawBlock $ (blocks I.! (fromIntegral id) ) add
 getBlockColor :: (Word8,Word8) -> [Word8]
 getBlockColor (id,add) = colorBblock $ (blocks I.! (fromIntegral id) ) add
 
+bugBlock :: BlockInfo
+bugBlock = BlockInfo True "bug" [244, 47, 224, 255]
+
 blocks :: I.IntMap (Word8 -> BlockInfo)
-blocks = I.fromList
+blocks = I.fromDistinctAscList
     [( 0, \_	 -> BlockInfo False "air" [0, 0, 0, 255] )
 	,( 1, \_	 -> BlockInfo True "stone" [80, 80, 80, 255] )
 	,( 2, \_	 -> BlockInfo True "grass" [76, 104, 38, 255] )
@@ -27,6 +30,7 @@ blocks = I.fromList
                     3 -> BlockInfo True "jungle_wood_planks" [113, 79, 52, 255]
                     4 -> BlockInfo True "acacia_wood_planks" [185, 102, 54, 255]
                     5 -> BlockInfo True "dark_oak_wood_planks" [55, 33, 8, 255]
+                    _ -> bugBlock
     )
 	,( 6, \_	 -> BlockInfo False "sapling" [0, 0, 0, 255] )
 	,( 7, \_	 -> BlockInfo True "bedrock" [39, 39, 39, 255] )
@@ -44,6 +48,7 @@ blocks = I.fromList
                     1 -> BlockInfo True "spruce_wood" [119, 87, 53, 255]
                     2 -> BlockInfo True "birch_wood" [113, 79, 52, 255]
                     3 -> BlockInfo True "jungle_wood" [55, 33, 8, 255]
+                    _ -> bugBlock
     )
 	,( 18, \_	 -> BlockInfo True "leaves" [51, 126, 17, 255] )
 	,( 19, \_	 -> BlockInfo True "sponge" [188, 188, 85, 255] )
@@ -79,6 +84,7 @@ blocks = I.fromList
                     13 -> BlockInfo True "green_wool" [53, 70, 27, 255]
                     14 -> BlockInfo True "red_wool" [150, 52, 48, 255]
                     15 -> BlockInfo True "black_wool" [25, 22, 22, 255]
+                    _ -> bugBlock
     )
     ,( 36, \_	 -> BlockInfo False "piston_extension" [0, 0, 0, 255] )
 	,( 37, \_	 -> BlockInfo False "yellow_flower" [0, 0, 0, 255] )
@@ -156,6 +162,7 @@ blocks = I.fromList
                     13 -> BlockInfo True "green_stained_glass" [53, 70, 27, 255]
                     14 -> BlockInfo True "red_stained_glass" [150, 52, 48, 255]
                     15 -> BlockInfo True "black_stained_glass" [25, 22, 22, 255]
+                    _ -> bugBlock
     )
     ,( 96, \_	 -> BlockInfo True "trapdoor" [186, 150, 97, 255] )
 	,( 97, \_	 -> BlockInfo True "monster_egg" [80, 80, 80, 255] )
@@ -237,6 +244,7 @@ blocks = I.fromList
                     13 -> BlockInfo True "green_hardened_clay" [72, 79, 38, 255]
                     14 -> BlockInfo True "red_hardened_clay" [146, 60, 47, 255]
                     15 -> BlockInfo True "black_hardened_clay" [33, 18, 13, 255]
+                    _ -> bugBlock
     )
     --,( 160, \_	 -> BlockInfo True "stained_glass_pane" [0, 0, 0, 255] )
 	,( 160, \i	 -> case i of
@@ -256,11 +264,13 @@ blocks = I.fromList
                     13 -> BlockInfo True "green_stained_glass_pane" [53, 70, 27, 255]
                     14 -> BlockInfo True "red_stained_glass_pane" [150, 52, 48, 255]
                     15 -> BlockInfo True "black_stained_glass_pane" [25, 22, 22, 255]
+                    _ -> bugBlock
     )
 	,( 161, \_	 -> BlockInfo True "leaves2" [51, 126, 17, 255] )
 	,( 162, \i	 -> case ( i .&. 0x03) of
                     0 -> BlockInfo True "acacia_wood" [185, 102, 54, 255]
                     1 -> BlockInfo True "dark_oak_wood" [55, 33, 8, 255]
+                    _ -> bugBlock
     )
 	,( 163, \_	 -> BlockInfo True "acacia_stairs" [185, 102, 54, 255] )
 	,( 164, \_	 -> BlockInfo True "dark_oak_stairs" [55, 33, 8, 255] )
@@ -287,6 +297,7 @@ blocks = I.fromList
                     13 -> BlockInfo True "green_carpet" [53, 70, 27, 255]
                     14 -> BlockInfo True "red_carpet" [150, 52, 48, 255]
                     15 -> BlockInfo True "black_carpet" [25, 22, 22, 255]
+                    _ -> bugBlock
     )
 	,( 172, \_	 -> BlockInfo True "hardened_clay" [139, 84, 60, 255] )
 	,( 173, \_	 -> BlockInfo True "coal_block" [23, 23, 23, 255] )

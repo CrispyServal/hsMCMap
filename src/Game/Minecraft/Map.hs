@@ -13,6 +13,7 @@ import Data.Word
 import Data.Int
 import Data.List
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 import Data.Bits
 import System.Directory
@@ -35,11 +36,19 @@ make2D :: Int -> [a] -> [[a]]
 make2D _ [] = []
 make2D y xs = (Data.List.take y xs) : make2D y (Data.List.drop y xs)
 
+allDraw :: [(Word8,Word8)] -> Bool
+allDraw = all ifDraw
+
 toTopView :: Chunk -> ChunkTop
-toTopView (Chunk x z bs) = ChunkTop x z (foldr ref e bs) where
+toTopView (Chunk x z bs) = ChunkTop x z (myFoldl' ref e $ reverse bs) where
     e = replicate 256 (0x00,0x00)
-    ref lows highs = zipWith refT lows highs
-    refT low high
+    myFoldl' f e [] = e
+    myFoldl' f e (x:xs)
+        | allDraw e = e
+        | otherwise =   let e' = e `f` x
+                        in seq e' $ myFoldl' f e' xs
+    ref highs lows = zipWith refT highs lows
+    refT high low
         | ifDraw high = high
         | otherwise = low
 
@@ -64,7 +73,7 @@ splitData s = concat $ map sp s where
 loadRegions :: String -> IO [ChunkTop]
 loadRegions path = do
 	rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
-	contents <- sequence $ map (B.readFile .((path ++ "/") ++ )) rFiles
+	contents <- sequence $ map (BL.readFile .((path ++ "/") ++ )) rFiles
 	let r = map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
 	return r
 	
