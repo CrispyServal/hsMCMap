@@ -1,4 +1,0 @@
-#little world
-#dist/build/main/main testFile/testWorld/region > test.out +RTS -p 
-#largte world(for my computer)
-dist/build/main/main /win/D/b-游戏向/MC-x/minecraft_lynx_backup/world/region > test.out +RTS -p 
