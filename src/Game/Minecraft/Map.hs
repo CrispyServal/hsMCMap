@@ -19,6 +19,7 @@ import Data.Bits
 import System.Directory
 
 import Control.Applicative
+--import Control.Parallel.Strategies
 
 import Debug.Trace
 
@@ -36,9 +37,17 @@ make2D :: Int -> [a] -> [[a]]
 make2D _ [] = []
 make2D y xs = (Data.List.take y xs) : make2D y (Data.List.drop y xs)
 
+allDraw :: [(Word8,Word8)] -> Bool
+allDraw = all ifDraw
+
 toTopView :: Chunk -> ChunkTop
-toTopView (Chunk x z bs) = ChunkTop x z (foldr ref e bs) where
+toTopView (Chunk x z bs) = ChunkTop x z (myFoldl' ref e $ reverse bs) where
     e = replicate 256 (0x00,0x00)
+    myFoldl' f e [] = e
+    myFoldl' f e (x:xs)
+        | allDraw e = e
+        | otherwise =   let e' = e `f` x
+                        in seq e' $ myFoldl' f e' xs
     ref lows highs = zipWith refT lows highs
     refT low high
         | ifDraw high = high
