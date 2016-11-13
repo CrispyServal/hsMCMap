@@ -58,7 +58,13 @@ library
   
   --cabal-version: >= 1.10
   -- Other library packages from which modules are imported.
-  build-depends:       base ==4.*, directory ==1.2.*, containers ==0.5.*, bytestring ==0.10.*, zlib ==0.6.*, attoparsec-binary ==0.2.*, attoparsec ==0.13.*, data-binary-ieee754 ==0.4.*
+  build-depends:       base ==4.*
+                     , directory ==1.2.*
+                     , containers ==0.5.*
+                     , bytestring ==0.10.*
+                     , zlib ==0.6.*
+                     , data-binary-ieee754 ==0.4.*
+                     , binary
   
   -- Directories containing source files.
   hs-source-dirs:      src

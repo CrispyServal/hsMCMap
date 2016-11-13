@@ -9,13 +9,14 @@ import Game.Minecraft.Map.NBT
 --import Data.Attoparsec.Binary
 --import Data.Attoparsec
 
-import Data.Binary.Strict.Get
+import Data.Binary.Get
 
 import Data.Word
 import Data.List
 import Data.Either
 import Data.Bits
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import qualified Codec.Compression.GZip as G
 import qualified Data.ByteString.Char8 as BC
 
@@ -39,7 +40,7 @@ location = getWord32be
 timeStamp = getWord32be -- will be ignore
 
 --offset in byte from start of file
-getLocation :: Header -> [(Integer,Integer)]
+getLocation :: Header -> [(Int,Int)]
 getLocation (Header ls _) = filter (\(x,_)->x/=0) $ sort $ map  
 		( (\l -> mapTuple2 (fromIntegral.(4096*)) (l `shiftR` 8 , l .&. 0xff) ) )
 		ls
@@ -51,24 +52,25 @@ mapTuple2 f (x,y) = (f x, f y)
 
 -- raw chunk data: without parse its nbt
 -- ChunkRaw length type_of_compression data(compressed NBT)
-data ChunkRaw = ChunkRaw Word32 Word8 B.ByteString deriving Show
+data ChunkRaw = ChunkRaw Word32 Word8 BL.ByteString deriving Show
 
-getRawNBT :: ChunkRaw -> B.ByteString
+getRawNBT :: ChunkRaw -> BL.ByteString
 getRawNBT (ChunkRaw _ _ b) = b
 
 chunkGet :: Get ChunkRaw
 chunkGet = do
 	len <- getWord32be
 	t 	<- getWord8
-	bs 	<- B.pack <$> (replicateM . fromIntegral) (len-1) getWord8
+	--bs 	<- B.pack <$> (replicateM . fromIntegral) (len-1) getWord8
+	bs 	<- getLazyByteString $ fromIntegral (len-1)
 	return $ ChunkRaw len t bs
 
 -- from whole ByteString to [ChunkRaw]
-getChunkRaws :: B.ByteString -> [ChunkRaw]
-getChunkRaws c = case (runGet headGet c) of
-			(Right res, _) -> let offsets = map (\(x,_) -> x) ( getLocation res ) in
-									let rs = [c] <**> (map (B.drop . fromIntegral) offsets)  <**> [(runGet chunkGet)] in
-                                        rights rs
-			(Left err, _)	-> error err
+getChunkRaws :: BL.ByteString -> [ChunkRaw]
+getChunkRaws c =	let
+						head = runGet headGet c
+						offsets = map (\(x,_) -> x) ( getLocation head)
+						crs = [c] <**> (map (BL.drop . fromIntegral) offsets)  <**> [runGet chunkGet]
+					in 	crs
 
 
