@@ -6,8 +6,10 @@ import Game.Minecraft.Map.NBT
 --import System.IO
 --import System.Environment
 
-import Data.Attoparsec.Binary
-import Data.Attoparsec
+--import Data.Attoparsec.Binary
+--import Data.Attoparsec
+
+import Data.Binary.Strict.Get
 
 import Data.Word
 import Data.List
@@ -26,14 +28,15 @@ type TimeStamp = Word32
 
 data Header = Header [Location] [TimeStamp] deriving Show
 
-headParser :: Parser Header
-headParser = do
+--headGet :: Get Header
+headGet :: Get Header
+headGet = do
 	l <- replicateM 1024 location
 	t <- replicateM 1024 timeStamp
 	return $ Header l t
 
-location = anyWord32be
-timeStamp = anyWord32be -- will be ignore
+location = getWord32be
+timeStamp = getWord32be -- will be ignore
 
 --offset in byte from start of file
 getLocation :: Header -> [(Integer,Integer)]
@@ -53,19 +56,19 @@ data ChunkRaw = ChunkRaw Word32 Word8 B.ByteString deriving Show
 getRawNBT :: ChunkRaw -> B.ByteString
 getRawNBT (ChunkRaw _ _ b) = b
 
-chunkPaser :: Parser ChunkRaw
-chunkPaser = do
-	len <- anyWord32be
-	t 	<- anyWord8
-	bs 	<- B.pack <$> (replicateM . fromIntegral) (len-1) anyWord8
+chunkGet :: Get ChunkRaw
+chunkGet = do
+	len <- getWord32be
+	t 	<- getWord8
+	bs 	<- B.pack <$> (replicateM . fromIntegral) (len-1) getWord8
 	return $ ChunkRaw len t bs
 
 -- from whole ByteString to [ChunkRaw]
 getChunkRaws :: B.ByteString -> [ChunkRaw]
-getChunkRaws c = case (parse headParser c) of
-			Done restC res 	-> let offsets = map (\(x,_) -> x) ( getLocation res ) in
-									let rs = [c] <**> (map (B.drop . fromIntegral) offsets)  <**> [(parseOnly chunkPaser)] in
+getChunkRaws c = case (runGet headGet c) of
+			(Right res, _) -> let offsets = map (\(x,_) -> x) ( getLocation res ) in
+									let rs = [c] <**> (map (B.drop . fromIntegral) offsets)  <**> [(runGet chunkGet)] in
                                         rights rs
-			_				-> error "parse Head Error when parsing region"
+			(Left err, _)	-> error err
 
 
