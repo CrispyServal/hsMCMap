@@ -61,11 +61,11 @@ splitData s = concat $ map sp s where
     sp w = [w `shiftR` 4 , w .&. 0x0F]
 
 
-loadRegions :: String -> IO [[ChunkTop]]
+loadRegions :: String -> IO [ChunkTop]
 loadRegions path = do
 	rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
 	contents <- sequence $ map (B.readFile .((path ++ "/") ++ )) rFiles
-	let r = (pure $ map (toTopView . buildChunk . getNBT . getRawNBT)) <*> (map getChunkRaws contents)
+	let r = map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
 	return r
 	
 -- {Y} rename this plz
