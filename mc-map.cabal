@@ -48,6 +48,10 @@ Flag Debug
     Description: enable debug: profiler
     Manual:      True
     Default:     False
+Flag P
+    Description: enable parallel
+    Manual:      True
+    Default:      False
 
 library
   -- Modules exported by the library.
@@ -79,3 +83,5 @@ executable main
   GHC-Options:         -Wall -O2
   if flag(debug)
     GHC-Options:       -Wall -O2 -prof -auto-all -caf-all -fforce-recomp
+  if flag(P)
+    GHC-Options:       -Wall -O2 -with-rtsopts=-N4 -threaded -prof -auto-all -caf-all -fforce-recomp

@@ -48,8 +48,9 @@ toTopView (Chunk x z bs) = ChunkTop x z (myFoldl' ref e $ reverse bs) where
         | allDraw e = e
         | otherwise =   let e' = e `f` x
                         in seq e' $ myFoldl' f e' xs
-    ref lows highs = zipWith refT lows highs
-    refT low high
+    --ref lows highs = zipWith refT lows highs
+    ref highs lows = zipWith refT highs lows
+    refT high low
         | ifDraw high = high
         | otherwise = low
 
