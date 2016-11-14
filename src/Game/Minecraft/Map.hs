@@ -20,8 +20,10 @@ import System.Directory
 import Codec.Picture
 import Codec.Picture.Png
 
-import qualified Data.Vector.Generic         as V
-import qualified Data.Vector.Generic.Mutable as MV
+--import qualified Data.Vector.Generic         as V
+--import qualified Data.Vector.Generic.Mutable as MV
+import qualified Data.Vector.Storable as V
+import qualified Data.Vector.Storable.Mutable as MV
 
 import Control.Monad
 import Control.Monad.Primitive
@@ -125,7 +127,8 @@ getRange chs = foldl' ref e chs where
     e = (0,0,0,0)
     ref (oMinX,oMinZ,oMaxX,oMaxZ) (ChunkTop x z _) = (min oMinX x, min oMinZ z,max oMaxX x, max oMaxZ z)
 
-writeList :: (PrimMonad m, MV.MVector v a) => v (PrimState m) a -> Int -> [a] -> m ()
+--writeList :: (PrimMonad m, MV.MVector v a) => v (PrimState m) a -> Int -> [a] -> m ()
+writeList :: (PrimMonad m, MV.Storable a) => MV.MVector (PrimState m) a -> Int -> [a] -> m ()
 writeList v pos xs = do
     forM_ [0..(length xs - 1)] (\i -> MV.write v (pos+i) (xs !! i)) 
     --forM_ [0..(length xs - 1)] (\i -> MV.unsafeWrite v (pos+i) (xs !! i)) 
@@ -141,8 +144,8 @@ lqFun chs = do
                 width = fromIntegral (maxX - minX + 1) :: Int
                 height = fromIntegral (maxZ - minZ + 1) :: Int
                 n = width * height * 1024
-                --fillChunk :: (PrimMonad m, MV.MVector v a) => ChunkTop -> v (PrimState m) a -> m ()
-                fillChunk :: (PrimMonad m, MV.MVector v Word8) => ChunkTop -> v (PrimState m) Word8 -> m ()
+                --fillChunk :: (PrimMonad m, MV.MVector v Word8) => ChunkTop -> v (PrimState m) Word8 -> m ()
+                fillChunk :: (PrimMonad m) => ChunkTop -> MV.MVector (PrimState m) Word8 -> m ()
                 fillChunk (ChunkTop x z chData) v = do
                     let xr = x - minX
                     let zr = z - minZ
