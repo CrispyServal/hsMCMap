@@ -151,6 +151,11 @@ lqFun chs = do
                     --traceM $ ("working on: (" ++ (show xr) ++ "," ++ (show zr) ++ ")" )
                     forM_ [0..15] $ \row -> writeList v ((width*16*4)*(16*zr+row) + 16*4*xr) (chColor !! row)
 
+test :: IO (Image PixelRGBA8)
+test = do
+    v <- MV.new (10240*10240*4)
+    fv <- V.unsafeFreeze v
+    return $ Image 10240 10240 fv
 
 
 -- usage ./main "a region folder"
@@ -160,12 +165,14 @@ main = do
         print "starting"
         [testArg] <- getArgs
         print "loading resources..."
-        rs <- loadRegions testArg
+        --rs <- loadRegions testArg
         print "buiding image..."
-        let img = yypFun rs
+        --let img = yypFun rs
         --img <- lqFun rs
         print "saiving..."
-        writePng "lq.png" img 
+        --writePng "lq.png" img 
+        t <- test
+        writePng "test.png" t
         --print $ ("w = " ++ (show $ imageWidth yypRes) ++ "\nh = " ++ (show $ imageHeight yypRes) ++ "\n data = " ++ (show $ V.length $ imageData yypRes))
         print "done"
 
