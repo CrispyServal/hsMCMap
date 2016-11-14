@@ -18,7 +18,7 @@ bugBlock = BlockInfo True "bug" [244, 47, 224, 255]
 
 blocks :: I.IntMap (Word8 -> BlockInfo)
 blocks = I.fromDistinctAscList
-    [( 0, \_	 -> BlockInfo False "air" [0, 0, 0, 255] )
+    [( 0, \_	 -> BlockInfo False "air" [0, 0, 0, 0] )
 	,( 1, \_	 -> BlockInfo True "stone" [80, 80, 80, 255] )
 	,( 2, \_	 -> BlockInfo True "grass" [76, 104, 38, 255] )
 	,( 3, \_	 -> BlockInfo True "dirt" [118, 82, 55, 255] )
