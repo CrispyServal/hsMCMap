@@ -120,6 +120,40 @@ yypFun chunkTopGroup = Image width height (V.fromList $ unfoldMap (insertMap (ge
                         unfold chunkRow 0 result =result
                         unfold chunkRow num result =unfold [tail chunk | chunk <- chunkRow] (num - 1) (result `seq` result ++ concat [head chunk| chunk <- chunkRow])    
 
+yypFast :: [ChunkTop] -> Image PixelRGBA8
+yypFast chunkTopGroup = Image width height (V.fromList $ insertMap (getSize chunkTopGroup) chunkTopGroup)
+    where
+        getSize :: [ChunkTop] -> (Int, Int, Int, Int)
+        getSize chunkTopGroup =(maximum xlist, minimum xlist, maximum zlist, minimum zlist)
+            where 
+                xlist = map (fromIntegral . getTopX) chunkTopGroup :: [Int]
+                zlist = map (fromIntegral . getTopZ) chunkTopGroup :: [Int]
+        getHW :: (Int, Int, Int, Int) -> (Int, Int)
+        getHW (xmax, xmin, zmax, zmin) = mapTuple2 (16*) (xmax - xmin + 1, zmax - zmin + 1)
+        (width, height) = getHW . getSize $ chunkTopGroup
+        defaultChunk = replicate 16 $ replicate 16  $ replicate 4 (0::Word8)
+        insertMap :: (Int, Int, Int, Int) -> [ChunkTop]-> [Word8]
+        insertMap (xmax, xmin, zmax, zmin) chunkTopGroup = insertRow zmin []
+            where
+                insertOneChunk :: (Int, Int) -> [[[Word8]]]
+                insertOneChunk (x, z)
+                    | length (findChunk x z) > 0 =make2D 16 $ map getBlockColor $ getTopData $ head $ findChunk x z
+                    | otherwise =defaultChunk
+                    where
+                        findChunk x z = [chunk |chunk <- chunkTopGroup, getTopX chunk == x, getTopZ chunk == z]
+                
+                insertRow :: Int -> [Word8] -> [Word8]
+                insertRow znow chunkList
+                    | znow >= zmax =chunkList
+                    | otherwise =insertRow (znow `seq` znow + 1) (chunkList `seq` chunkList ++ unfoldRow [insertOneChunk (xnow, znow) | xnow <- [xmin..xmax] ] )
+
+                unfoldRow :: [[[[Word8]]]] -> [Word8]
+                unfoldRow chunkRow = concat $ unfold chunkRow 16 []
+                    where
+                        unfold :: [[[[Word8]]]] -> Int -> [[Word8]] -> [[Word8]]
+                        unfold chunkRow 0 result =result
+                        unfold chunkRow num result =unfold [tail chunk | chunk <- chunkRow] (num `seq` num - 1) (result `seq` result ++ concat [head chunk| chunk <- chunkRow])     
+
 getRange :: [ChunkTop] -> (Int,Int,Int,Int)
 getRange chs = foldl' ref e chs where
     e = (0,0,0,0)
@@ -216,13 +250,13 @@ main = do
         print "loading resources..."
         rs <- loadRegions testArg
         print "buiding image..."
-        writeFile "test.out" (show rs)
-        --let img = yypFun rs
+
+        let img = yypFast rs
         --img <- lqFun rs
-        --let img = lqFun2 rs
-        --img <- test
-        print "saving..."
-        --writePng "lq.png" img 
+        print "saiving..."
+        writePng "lq.png" img 
+        --t <- test
+        --writePng "test.png" t
         --print $ ("w = " ++ (show $ imageWidth yypRes) ++ "\nh = " ++ (show $ imageHeight yypRes) ++ "\n data = " ++ (show $ V.length $ imageData yypRes))
         print "done"
 
