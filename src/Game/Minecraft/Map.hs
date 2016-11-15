@@ -31,14 +31,16 @@ import Control.Applicative
 
 import Debug.Trace
 
+--import Control.Parallel.Strategies
+
 data Chunk = Chunk XPos ZPos [[(Word8,Word8)]] deriving (Eq,Show)
 type XPos = Int
 type ZPos = Int
 data ChunkTop = ChunkTop
                 {
-                    getTopX ::  XPos,
-                    getTopZ ::  ZPos,
-                    getTopData ::  [(Word8,Word8)]
+                    getTopX ::  !XPos,
+                    getTopZ ::  !ZPos,
+                    getTopData ::  ![(Word8,Word8)]
                 } deriving (Eq, Show)
 
 make2D :: Int -> [a] -> [[a]]
@@ -78,19 +80,18 @@ splitData :: [Word8] -> [Word8]
 splitData s = concat $ map sp s where
     sp w = [w `shiftR` 4 , w .&. 0x0F]
 
-
 loadRegions :: String -> IO [ChunkTop]
 loadRegions path = do
-	rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
-	contents <- sequence $ map (BL.readFile .((path ++ "/") ++ )) rFiles
-	let r = map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
-	return r
-	
--- {Y} rename this plz
--- {Y} yypFun :: [[ChunkTop]] -> [Word8]
---yypFun :: [ChunkTop] -> (Int, Int, [Word8])
+    rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
+    contents <- sequence $ map (BL.readFile .((path ++ "/") ++ )) rFiles
+    --let r =  map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
+    let r =  map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
+    return r
+
 yypFun :: [ChunkTop] -> Image PixelRGBA8
+
 yypFun chunkTopGroup = Image width height (V.fromList $ unfoldMap (insertMap (getSize chunkTopGroup) chunkTopGroup))
+--yypFun chunkTopGroup = (,,) width height (unfoldMap (insertMap (getSize chunkTopGroup) chunkTopGroup))
     where
         getSize :: [ChunkTop] -> (Int, Int, Int, Int)
         getSize chunkTopGroup =(maximum xlist, minimum xlist, maximum zlist, minimum zlist)
@@ -106,7 +107,7 @@ yypFun chunkTopGroup = Image width height (V.fromList $ unfoldMap (insertMap (ge
             where
                 insertOneChunk :: (Int, Int) -> [[[Word8]]]
                 insertOneChunk (x, z)
-                    | length (findChunk x z) > 0 =make2D 16 $ map getBlockColor $ getTopData $ head $ findChunk x z
+                    | not $ null (findChunk x z) = make2D 16 $ map getBlockColor $ getTopData $ head $ findChunk x z
                     | otherwise =defaultChunk
                     where
                         findChunk x z = [chunk |chunk <- chunkTopGroup, getTopX chunk == x, getTopZ chunk == z]
@@ -137,7 +138,7 @@ yypFast chunkTopGroup = Image width height (V.fromList $ insertMap (getSize chun
             where
                 insertOneChunk :: (Int, Int) -> [[[Word8]]]
                 insertOneChunk (x, z)
-                    | length (findChunk x z) > 0 =make2D 16 $ map getBlockColor $ getTopData $ head $ findChunk x z
+                    | not $ null (findChunk x z) = make2D 16 $ map getBlockColor $ getTopData $ head $ findChunk x z
                     | otherwise =defaultChunk
                     where
                         findChunk x z = [chunk |chunk <- chunkTopGroup, getTopX chunk == x, getTopZ chunk == z]
@@ -192,8 +193,8 @@ lqFun chs = do
                     let xr = x - minX
                     let zr = z - minZ
                     --let chColor = concatMap getBlockColor chData
-                    let chColor = make2D 16 $ concatMap getBlockColor chData
-                    forM_ [0..15] $ \row -> writeList v ( (width`shiftL`6)*( (zr`shiftL`4) + row) + (xr`shiftL`6) ) (chColor !! row)
+                    let chColor = make2D 64 $ concatMap getBlockColor chData
+                    forM_ [0..15] $ \row -> writeList v ( wordPerLine *( (zr`shiftL`4) + row) + (xr`shiftL`6) ) (chColor !! row)
                     --forM_ [0..1023] $ \i -> MV.unsafeWrite v (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)
 
 lqFun2 :: [ChunkTop] -> Image PixelRGBA8
@@ -233,10 +234,12 @@ test = do
     let red = concat $ replicate 16 [255,0,0,255]
     let green = concat $ replicate 16 [0,255,0,255]
     let blue = concat $ replicate 16 [0,0,255,255]
-    forM_ [1..10240] $ \line -> do
-        writeList v (10240*4*line) red
-        writeList v (10240*4*line + 64) green
-        writeList v (10240*4*line + 128) blue
+    forM_ [0..10240-1] $ \line -> do
+        forM_ [0..640-1] $ \j -> do
+            case (j `mod` 3) of
+                0 -> writeList v (10240*4*line + 64 * j) red
+                1 -> writeList v (10240*4*line + 64 * j) green
+                2 -> writeList v (10240*4*line + 64 * j) blue
     fv <- V.unsafeFreeze v
     return $ Image 10240 10240 fv
 
@@ -246,15 +249,19 @@ test = do
 main :: IO ()
 main = do 
         print "starting"
-        [testArg] <- getArgs
+        [inputFile,outputFile] <- getArgs
         print "loading resources..."
-        rs <- loadRegions testArg
+        rs <- loadRegions inputFile
         print "buiding image..."
 
-        let img = yypFast rs
+        --let img = yypFast rs
+        let img = yypFun rs
         --img <- lqFun rs
-        print "saiving..."
-        writePng "lq.png" img 
+        --img <- test
+        print "saving..."
+        --writeFile "test.out" $ show rs
+        --writeFile "fuck.you" $ show $ null rs
+        writePng outputFile img 
         --t <- test
         --writePng "test.png" t
         --print $ ("w = " ++ (show $ imageWidth yypRes) ++ "\nh = " ++ (show $ imageHeight yypRes) ++ "\n data = " ++ (show $ V.length $ imageData yypRes))
