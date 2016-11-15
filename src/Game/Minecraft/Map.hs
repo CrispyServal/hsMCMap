@@ -99,7 +99,7 @@ yypFun chunkTopGroup = Image width height (V.fromList $ unfoldMap (insertMap (ge
                 zlist = map (fromIntegral . getTopZ) chunkTopGroup :: [Int]
         getHW :: (Int, Int, Int, Int) -> (Int, Int)
         getHW (xmax, xmin, zmax, zmin) = mapTuple2 (16*) (xmax - xmin + 1, zmax - zmin + 1)
-        (height, width) = getHW . getSize $ chunkTopGroup
+        (width, height) = getHW . getSize $ chunkTopGroup
         defaultChunk = replicate 16 $ replicate 16  $ replicate 4 (0::Word8)
         insertMap :: (Int, Int, Int, Int) -> [ChunkTop]->[[[[[Word8]]]]]
         insertMap (xmax, xmin, zmax, zmin) chunkTopGroup = [[insertOneChunk (xnow, znow) | xnow <- [xmin..xmax]] | znow <- [zmin..zmax]]
@@ -118,7 +118,7 @@ yypFun chunkTopGroup = Image width height (V.fromList $ unfoldMap (insertMap (ge
                     where
                         unfold :: [[[[Word8]]]] -> Int -> [[Word8]] -> [[Word8]]
                         unfold chunkRow 0 result =result
-                        unfold chunkRow num result =unfold [tail chunk | chunk <- chunkRow] (num - 1) (result ++ concat [head chunk| chunk <- chunkRow])    
+                        unfold chunkRow num result =unfold [tail chunk | chunk <- chunkRow] (num - 1) (result `seq` result ++ concat [head chunk| chunk <- chunkRow])    
 
 getRange :: [ChunkTop] -> (Int,Int,Int,Int)
 getRange chs = foldl' ref e chs where
@@ -133,27 +133,76 @@ writeList v pos xs = do
 lqFun :: [ChunkTop] -> IO (Image PixelRGBA8)
 lqFun chs = do
                 --v <- MV.replicate n (0::Word8)
+                --traceM $ ("n = " ++ (show n))
                 v <- MV.new n
+                --forM_ (concatMap buildIV chs) $ \(i,value) -> MV.unsafeWrite v i value
                 forM_ chs $ \ch -> fillChunk ch v
                 fv <- V.unsafeFreeze v
-                return $ Image (width*16) (height*16) fv
+                return $ Image (width `shiftL` 4) (height `shiftL` 4) fv
             where
                 (minX, minZ, maxX, maxZ) = getRange chs
-                width = fromIntegral (maxX - minX + 1) :: Int
-                height = fromIntegral (maxZ - minZ + 1) :: Int
-                n = width * height * 1024
+                width = maxX - minX + 1
+                height = maxZ - minZ + 1
+                wordPerLine = width`shiftL`6
+                n = width * height `shiftL` 10
+                {-
+                buildIV (ChunkTop x z chData) = map (\i -> (,) (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)) [0..1023]
+                    where
+                        xr = x - minX
+                        zr = z - minZ
+                        chColor = concatMap getBlockColor chData
+                    -}
                 fillChunk :: (PrimMonad m, MV.MVector v Word8) => ChunkTop -> v (PrimState m) Word8 -> m ()
                 --fillChunk :: (PrimMonad m) => ChunkTop -> MV.MVector (PrimState m) Word8 -> m ()
                 fillChunk (ChunkTop x z chData) v = do
                     let xr = x - minX
                     let zr = z - minZ
-                    let chColor = make2D (16*4) $ concatMap getBlockColor chData
-                    --traceM $ ("working on: (" ++ (show xr) ++ "," ++ (show zr) ++ ")" )
-                    forM_ [0..15] $ \row -> writeList v ((width*16*4)*(16*zr+row) + 16*4*xr) (chColor !! row)
+                    --let chColor = concatMap getBlockColor chData
+                    let chColor = make2D 16 $ concatMap getBlockColor chData
+                    forM_ [0..15] $ \row -> writeList v ( (width`shiftL`6)*( (zr`shiftL`4) + row) + (xr`shiftL`6) ) (chColor !! row)
+                    --forM_ [0..1023] $ \i -> MV.unsafeWrite v (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)
+
+lqFun2 :: [ChunkTop] -> Image PixelRGBA8
+lqFun2 chs = Image (width `shiftL` 4) (height `shiftL` 4) v
+    where
+        (minX, minZ, maxX, maxZ) = getRange chs
+        width = maxX - minX + 1
+        height = maxZ - minZ + 1
+        n = width * height `shiftL` 10
+        wordPerLine = width`shiftL`6
+        v0 = V.replicate n (0::Word8)
+        --v = foldl' refV v0 chs
+        v = v0 V.// ivpsAll
+        ivpsAll = concatMap buildIV chs
+        buildIV (ChunkTop x z chData) = map (\i -> (,) (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)) [0..1023]
+            where
+                xr = x - minX
+                zr = z - minZ
+                chColor = concatMap getBlockColor chData
+{-
+        refV :: (V.Vector v Word8) => v Word8 -> ChunkTop -> v Word8
+        refV e (ChunkTop x z chData) =
+            let
+                xr = x - minX
+                zr = z - minZ
+                chColor = concatMap getBlockColor chData
+                ivps = map (\i -> (,) (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)) [0..1023]
+            in
+                e V.// ivps
+                -}
+
+                
 
 test :: IO (Image PixelRGBA8)
 test = do
     v <- MV.new (10240*10240*4)
+    let red = concat $ replicate 16 [255,0,0,255]
+    let green = concat $ replicate 16 [0,255,0,255]
+    let blue = concat $ replicate 16 [0,0,255,255]
+    forM_ [1..10240] $ \line -> do
+        writeList v (10240*4*line) red
+        writeList v (10240*4*line + 64) green
+        writeList v (10240*4*line + 128) blue
     fv <- V.unsafeFreeze v
     return $ Image 10240 10240 fv
 
@@ -165,14 +214,15 @@ main = do
         print "starting"
         [testArg] <- getArgs
         print "loading resources..."
-        --rs <- loadRegions testArg
+        rs <- loadRegions testArg
         print "buiding image..."
+        writeFile "test.out" (show rs)
         --let img = yypFun rs
         --img <- lqFun rs
-        print "saiving..."
+        --let img = lqFun2 rs
+        --img <- test
+        print "saving..."
         --writePng "lq.png" img 
-        t <- test
-        writePng "test.png" t
         --print $ ("w = " ++ (show $ imageWidth yypRes) ++ "\nh = " ++ (show $ imageHeight yypRes) ++ "\n data = " ++ (show $ V.length $ imageData yypRes))
         print "done"
 
