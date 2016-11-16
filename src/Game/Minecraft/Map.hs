@@ -26,6 +26,8 @@ import qualified Data.Vector.Generic.Mutable as MV
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Applicative
+import Control.Concurrent
+import Control.Concurrent.Chan
 
 import Debug.Trace
 
@@ -83,6 +85,30 @@ loadRegions path = do
     --let r =  map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
     let r =  map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
     return r
+
+loadRegionsP :: String -> IO [ChunkTop]
+loadRegionsP path = do
+    rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
+    contents <- sequence $ map (BL.readFile .((path ++ "/") ++ )) rFiles
+    let numCon = length contents
+    chTsChan <- newChan
+    forM_ [0..numCon-1] $ \i -> do forkIO $ fromOneFile (contents !! i) chTsChan
+    r <- reduce chTsChan numCon []
+    return r
+        where
+            fromOneFile content outChan = do
+                let chTs = map (toTopView . buildChunk . getNBT . getRawNBT) (getChunkRaws content)
+                writeChan outChan chTs
+            reduce inChan n nowResult
+                    | n == 0 = return nowResult
+                    | otherwise = do 
+                        chTs <- readChan inChan
+                        reduce inChan (n-1) (chTs `seq` chTs++nowResult)
+
+
+
+
+
 
 yypFun :: [ChunkTop] -> Image PixelRGBA8
 
@@ -202,7 +228,8 @@ main = do
         print "starting"
         [inputFile,outputFile] <- getArgs
         print "loading resources..."
-        rs <- loadRegions inputFile
+        --rs <- loadRegions inputFile
+        rs <- loadRegionsP inputFile
         print "buiding image..."
         img <- buildImage1 rs
         print "saving..."

@@ -51,6 +51,7 @@ executable main
   default-language:    Haskell2010
   GHC-Options:         -Wall -O2
   if flag(debug)
-    GHC-Options:       -Wall -O2 -prof -rtsopts -auto-all -caf-all -fforce-recomp
+    GHC-Options:       -Wall -O2 -rtsopts -auto-all -caf-all -fforce-recomp
   if flag(P)
-    GHC-Options:       -Wall -O2 -with-rtsopts=-N4 -threaded -prof -auto-all -caf-all -fforce-recomp
+    --GHC-Options:       -Wall -O2 -with-rtsopts=-N4 -threaded -prof -auto-all -caf-all -fforce-recomp
+    GHC-Options:       -Wall -O2 -rtsopts -threaded -auto-all -caf-all -fforce-recomp
