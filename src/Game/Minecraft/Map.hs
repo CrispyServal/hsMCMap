@@ -22,16 +22,12 @@ import Codec.Picture.Png
 
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as MV
---import qualified Data.Vector.Storable as V
---import qualified Data.Vector.Storable.Mutable as MV
 
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Applicative
 
 import Debug.Trace
-
---import Control.Parallel.Strategies
 
 data Chunk = Chunk XPos ZPos [[(Word8,Word8)]] deriving (Eq,Show)
 type XPos = Int
@@ -161,16 +157,12 @@ getRange chs = foldl' ref e chs where
     ref (oMinX,oMinZ,oMaxX,oMaxZ) (ChunkTop x z _) = (min oMinX x, min oMinZ z,max oMaxX x, max oMaxZ z)
 
 writeList :: (PrimMonad m, MV.MVector v a) => v (PrimState m) a -> Int -> [a] -> m ()
---writeList :: (PrimMonad m, MV.Storable a) => MV.MVector (PrimState m) a -> Int -> [a] -> m ()
 writeList v pos xs = do
     forM_ [0..(length xs - 1)] (\i -> MV.unsafeWrite v (pos+i) (xs !! i)) 
 
-lqFun :: [ChunkTop] -> IO (Image PixelRGBA8)
-lqFun chs = do
-                --v <- MV.replicate n (0::Word8)
-                --traceM $ ("n = " ++ (show n))
+buildImage1 :: [ChunkTop] -> IO (Image PixelRGBA8)
+buildImage1 chs = do
                 v <- MV.new n
-                --forM_ (concatMap buildIV chs) $ \(i,value) -> MV.unsafeWrite v i value
                 forM_ chs $ \ch -> fillChunk ch v
                 fv <- V.unsafeFreeze v
                 return $ Image (width `shiftL` 4) (height `shiftL` 4) fv
@@ -180,22 +172,12 @@ lqFun chs = do
                 height = maxZ - minZ + 1
                 wordPerLine = width`shiftL`6
                 n = width * height `shiftL` 10
-                {-
-                buildIV (ChunkTop x z chData) = map (\i -> (,) (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)) [0..1023]
-                    where
-                        xr = x - minX
-                        zr = z - minZ
-                        chColor = concatMap getBlockColor chData
-                    -}
                 fillChunk :: (PrimMonad m, MV.MVector v Word8) => ChunkTop -> v (PrimState m) Word8 -> m ()
-                --fillChunk :: (PrimMonad m) => ChunkTop -> MV.MVector (PrimState m) Word8 -> m ()
                 fillChunk (ChunkTop x z chData) v = do
                     let xr = x - minX
                     let zr = z - minZ
-                    --let chColor = concatMap getBlockColor chData
                     let chColor = make2D 64 $ concatMap getBlockColor chData
                     forM_ [0..15] $ \row -> writeList v ( wordPerLine *( (zr`shiftL`4) + row) + (xr`shiftL`6) ) (chColor !! row)
-                    --forM_ [0..1023] $ \i -> MV.unsafeWrite v (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)
 
 lqFun2 :: [ChunkTop] -> Image PixelRGBA8
 lqFun2 chs = Image (width `shiftL` 4) (height `shiftL` 4) v
@@ -214,38 +196,7 @@ lqFun2 chs = Image (width `shiftL` 4) (height `shiftL` 4) v
                 xr = x - minX
                 zr = z - minZ
                 chColor = concatMap getBlockColor chData
-{-
-        refV :: (V.Vector v Word8) => v Word8 -> ChunkTop -> v Word8
-        refV e (ChunkTop x z chData) =
-            let
-                xr = x - minX
-                zr = z - minZ
-                chColor = concatMap getBlockColor chData
-                ivps = map (\i -> (,) (wordPerLine * ((zr`shiftL`4)+(i`shiftR`6)) + xr`shiftL`6 + i`mod`64) (chColor !! i)) [0..1023]
-            in
-                e V.// ivps
-                -}
 
-                
-
-test :: IO (Image PixelRGBA8)
-test = do
-    v <- MV.new (10240*10240*4)
-    let red = concat $ replicate 16 [255,0,0,255]
-    let green = concat $ replicate 16 [0,255,0,255]
-    let blue = concat $ replicate 16 [0,0,255,255]
-    forM_ [0..10240-1] $ \line -> do
-        forM_ [0..640-1] $ \j -> do
-            case (j `mod` 3) of
-                0 -> writeList v (10240*4*line + 64 * j) red
-                1 -> writeList v (10240*4*line + 64 * j) green
-                2 -> writeList v (10240*4*line + 64 * j) blue
-    fv <- V.unsafeFreeze v
-    return $ Image 10240 10240 fv
-
-
--- usage ./main "a region folder"
-    -- {Y} rs :: [[ChunkTop]]
 main :: IO ()
 main = do 
         print "starting"
@@ -253,17 +204,8 @@ main = do
         print "loading resources..."
         rs <- loadRegions inputFile
         print "buiding image..."
-
-        --let img = yypFast rs
-        let img = yypFun rs
-        --img <- lqFun rs
-        --img <- test
+        img <- buildImage1 rs
         print "saving..."
-        --writeFile "test.out" $ show rs
-        --writeFile "fuck.you" $ show $ null rs
         writePng outputFile img 
-        --t <- test
-        --writePng "test.png" t
-        --print $ ("w = " ++ (show $ imageWidth yypRes) ++ "\nh = " ++ (show $ imageHeight yypRes) ++ "\n data = " ++ (show $ V.length $ imageData yypRes))
         print "done"
 

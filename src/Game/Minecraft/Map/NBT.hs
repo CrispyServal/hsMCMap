@@ -62,6 +62,7 @@ tag  9 = do
 	len <- int
 	TAG_List			<$> (replicateM . fromIntegral)  len (tag id)
 tag 10 = TAG_Compound	<$> compound
+--tag 10 = fmap TAG_Compound	$! compound
 tag 11 = do
 	len <- int
 	TAG_Int_Array 		<$> (replicateM . fromIntegral) len int
