@@ -13,7 +13,7 @@ import Control.Applicative
 import Control.Monad
 
 type Name = BL.ByteString
-data NBT = NBT Name Content
+data NBT = NBT Name !Content
 	deriving (Eq,Show)
 
 data Content = TAG_End					-- 0

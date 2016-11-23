@@ -31,7 +31,7 @@ import Control.Concurrent.Chan
 
 import Debug.Trace
 
-data Chunk = Chunk XPos ZPos [[(Word8,Word8)]] deriving (Eq,Show)
+data Chunk = Chunk !XPos !ZPos ![[(Word8,Word8)]] deriving (Eq,Show)
 type XPos = Int
 type ZPos = Int
 data ChunkTop = ChunkTop
@@ -228,10 +228,11 @@ main = do
         print "starting"
         [inputFile,outputFile] <- getArgs
         print "loading resources..."
-        --rs <- loadRegions inputFile
-        rs <- loadRegionsP inputFile
+        rs <- loadRegions inputFile
+        --rs <- loadRegionsP inputFile
         print "buiding image..."
         img <- buildImage1 rs
+        --writeFile "test.out" $ show rs
         print "saving..."
         writePng outputFile img 
         print "done"
