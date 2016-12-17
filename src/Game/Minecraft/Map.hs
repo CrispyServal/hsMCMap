@@ -2,7 +2,7 @@
 module Game.Minecraft.Map (
           loadRegionsP
         , buildImage
-        , buildAndWritePng 
+        , buildAndWritePng
         )where
 
 import Game.Minecraft.Map.NBT
@@ -31,16 +31,14 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Chan
 
-import Debug.Trace
-
 data Chunk = Chunk !XPos !ZPos ![[(Word8,Word8)]] deriving (Eq,Show)
 type XPos = Int
 type ZPos = Int
 data ChunkTop = ChunkTop
                 {
-                    getTopX ::  !XPos,
-                    getTopZ ::  !ZPos,
-                    getTopData ::  ![(Word8,Word8)]
+                    getTopX ::      !XPos,
+                    getTopZ ::      !ZPos,
+                    getTopData ::   ![(Word8,Word8)]
                 } deriving (Eq, Show)
 
 make2D :: Int -> [a] -> [[a]]
@@ -80,14 +78,6 @@ splitData :: [Word8] -> [Word8]
 splitData = concatMap sp where
     sp w = [w `shiftR` 4 , w .&. 0x0F]
 
-loadRegions :: String -> IO [ChunkTop]
-loadRegions path = do
-    rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
-    contents <- mapM (BL.readFile .((path ++ "/") ++ )) rFiles
-    --let r =  map (toTopView . buildChunk . getNBT . getRawNBT) (concatMap getChunkRaws contents)
-    let r =  map (toTopView . buildChunk . getNBT . chunkRawRawNBT) (concatMap getChunkRaws contents)
-    return r
-
 loadRegionsP :: String -> IO [ChunkTop]
 loadRegionsP path = do
     rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
@@ -115,10 +105,10 @@ writeList :: (PrimMonad m, MV.MVector v a) => v (PrimState m) a -> Int -> [a] ->
 writeList v pos xs = forM_ [0..(length xs - 1)] (\i -> MV.unsafeWrite v (pos+i) (xs !! i))
 
 buildAndWritePng :: [ChunkTop] -> FilePath -> Bool -> IO ()
-buildAndWritePng chs path log = do
-    when log $ print "building image ..."
+buildAndWritePng chs path wl = do
+    when wl $ print "building image ..."
     img <- buildImage chs
-    when log $ print "saving ..."
+    when wl $ print "saving ..."
     writePng path img
 
 buildImage :: [ChunkTop] -> IO (Image PixelRGBA8)
@@ -146,7 +136,7 @@ openList (TAGList cs) = cs
 openList _             = []
 
 byteArrayContent :: Content -> [Word8]
-byteArrayContent (TAGByte_Array bs) = bs
+byteArrayContent (TAGByteArray bs) = bs
 
 intContent :: Content -> Word32
 intContent (TAGInt n) = n

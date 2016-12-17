@@ -22,10 +22,6 @@ Flag Debug
     Description: enable debug: profiler
     Manual:      True
     Default:     False
-Flag P
-    Description: enable parallel
-    Manual:      True
-    Default:      False
 
 library
   exposed-modules:     Game.Minecraft.Map, Game.Minecraft.Map.NBT, Game.Minecraft.Map.Region
@@ -49,9 +45,6 @@ executable main
   build-depends:       base == 4.*
                     ,  mc-map
   default-language:    Haskell2010
-  GHC-Options:         -Wall -O2 -rtsopts -threaded -auto-all -caf-all -fforce-recomp
+  GHC-Options:         -Wall -O2 -rtsopts -threaded -auto-all -caf-all -fforce-recomp -with-rtsopts=-H
   if flag(debug)
     GHC-Options:       -Wall -O2 -rtsopts -auto-all -caf-all -fforce-recomp
-  if flag(P)
-    --GHC-Options:       -Wall -O2 -with-rtsopts=-N4 -threaded -prof -auto-all -caf-all -fforce-recomp
-    GHC-Options:       -Wall -O2 -rtsopts -threaded -auto-all -caf-all -fforce-recomp

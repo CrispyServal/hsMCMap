@@ -1,6 +1,5 @@
 module Game.Minecraft.Map.NBT (
             NBT(..)
-          , Name(..)
           , Content(..)
           , getNBT
           , navigate
@@ -9,7 +8,6 @@ module Game.Minecraft.Map.NBT (
 import qualified Codec.Compression.Zlib as Z
 import           Data.Binary.Get
 import           Data.Binary.IEEE754
-import qualified Data.ByteString        as B
 import qualified Data.ByteString.Lazy   as BL
 import           Data.List
 import           Data.Word
@@ -31,11 +29,11 @@ data Content = TAGEnd                      -- 0
     | TAGLong          Word64              -- 4
     | TAGFloat         Float               -- 5
     | TAGDouble        Double              -- 6
-    | TAGByte_Array    [Word8]             -- 7
+    | TAGByteArray    [Word8]             -- 7
     | TAGString        BL.ByteString       -- 8
     | TAGList          [Content]           -- 9
     | TAGCompound      [NBT]               --10
-    | TAGInt_Array     [Word32]            --11
+    | TAGIntArray     [Word32]            --11
     deriving (Eq,Show)
 
 -- ignore tag id at start(must be 10)
@@ -60,10 +58,10 @@ tag  5 = TAGFloat          <$> float
 tag  6 = TAGDouble         <$> double
 tag  7 = do
     len <- int
-    TAGByte_Array          <$> (replicateM . fromIntegral) len byte
+    TAGByteArray          <$> (replicateM . fromIntegral) len byte
 tag  8 = do
     len <- short
-    TAGString . BL.pack <$> (replicateM . fromIntegral) len byte
+    TAGString . BL.pack    <$> (replicateM . fromIntegral) len byte
 tag  9 = do
     id <- byte
     len <- int
@@ -72,7 +70,7 @@ tag 10 = TAGCompound       <$> compound
 --tag 10 = fmap TAGCompound    $! compound
 tag 11 = do
     len <- int
-    TAGInt_Array           <$> (replicateM . fromIntegral) len int
+    TAGIntArray           <$> (replicateM . fromIntegral) len int
 
 
 byte    = getWord8

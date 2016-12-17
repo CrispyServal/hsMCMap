@@ -6,16 +6,17 @@ module Game.Minecraft.Map.Block (
 import           Data.Bits
 import qualified Data.IntMap.Strict as I
 import           Data.Word
+
 data BlockInfo = BlockInfo {    toDrawBlock :: Bool
                             ,   nameBlock   :: String
                             ,   colorBblock :: [Word8]
                             } deriving Show
 
 ifDraw :: (Word8,Word8) -> Bool
-ifDraw (id, add) = toDrawBlock $ (blocks I.! fromIntegral id ) add
+ifDraw (idB, add) = toDrawBlock $ (blocks I.! fromIntegral idB ) add
 
 getBlockColor :: (Word8,Word8) -> [Word8]
-getBlockColor (id,add) = colorBblock $ (blocks I.! fromIntegral id) add
+getBlockColor (idB,add) = colorBblock $ (blocks I.! fromIntegral idB) add
 
 bugBlock :: BlockInfo
 bugBlock = BlockInfo True "bug" [244, 47, 224, 255]
@@ -28,12 +29,12 @@ blocks = I.fromDistinctAscList
     ,( 3, \_     -> BlockInfo True "dirt" [118, 82, 55, 255] )
     ,( 4, \_     -> BlockInfo True "cobblestone" [135, 135, 135, 255] )
     ,( 5, \i     -> case i of
-                    0 -> BlockInfo True "oak_wood_planks" [186, 150, 97, 255]
-                    1 -> BlockInfo True "spruce_wood_planks" [119, 87, 53, 255]
-                    2 -> BlockInfo True "birch_wood_planks" [212, 201, 139, 255]
-                    3 -> BlockInfo True "jungle_wood_planks" [113, 79, 52, 255]
-                    4 -> BlockInfo True "acacia_wood_planks" [185, 102, 54, 255]
-                    5 -> BlockInfo True "dark_oak_wood_planks" [55, 33, 8, 255]
+                    0 -> BlockInfo True "oak_wood_plank" [186, 150, 97, 255]
+                    1 -> BlockInfo True "spruce_wood_plank" [119, 87, 53, 255]
+                    2 -> BlockInfo True "birch_wood_plank" [212, 201, 139, 255]
+                    3 -> BlockInfo True "jungle_wood_plank" [113, 79, 52, 255]
+                    4 -> BlockInfo True "acacia_wood_plank" [185, 102, 54, 255]
+                    5 -> BlockInfo True "dark_oak_wood_plank" [55, 33, 8, 255]
                     _ -> bugBlock
     )
     ,( 6, \_     -> BlockInfo False "sapling" [0, 0, 0, 255] )
@@ -97,8 +98,39 @@ blocks = I.fromDistinctAscList
     ,( 40, \_     -> BlockInfo False "red_mushroom" [0, 0, 0, 255] )
     ,( 41, \_     -> BlockInfo True "gold_block" [237, 233, 95, 255] )
     ,( 42, \_     -> BlockInfo True "iron_block" [144, 144, 144, 255] )
-    ,( 43, \_     -> BlockInfo True "double_stone_slab" [160, 160, 160, 255] )
-    ,( 44, \_     -> BlockInfo True "stone_slab" [160, 160, 160, 255] )
+    ,( 43, \i     -> case i of
+                    0  -> BlockInfo True "double_stone_slab" [160, 160, 160, 255]
+                    1  -> BlockInfo True "double_sandstone_slab" [141, 136, 107, 255]
+                    2  -> BlockInfo False "double_(stone)_slab" [160, 160, 160, 255]
+                    3  -> BlockInfo True "double_cobblestone_slab" [135, 135, 135, 255]
+                    4  -> BlockInfo True "double_bricks_slab" [116, 67, 53, 255]
+                    5  -> BlockInfo True "double_stone_brick_slab" [75, 75, 75, 255]
+                    6  -> BlockInfo True "double_nether_brick_slab" [41, 21, 25, 255]
+                    7  -> BlockInfo True "double_quartz_slab" [148, 147, 143, 255]
+                    8  -> BlockInfo True "smooth_double_stone_slab" [160, 160, 160, 255]
+                    9  -> BlockInfo True "smooth_double_sandstone_slab" [141, 136, 107, 255]
+                    15 -> BlockInfo True "tile_double_quartz_slab" [148, 147, 143, 255]
+                    _  -> bugBlock
+    )
+    ,( 44, \i     -> case i of
+                    0  -> BlockInfo True "stone_slab" [160, 160, 160, 255]
+                    1  -> BlockInfo True "sandstone_slab" [141, 136, 107, 255]
+                    2  -> BlockInfo False "(stone)_slab" [160, 160, 160, 255]
+                    3  -> BlockInfo True "cobblestone_slab" [135, 135, 135, 255]
+                    4  -> BlockInfo True "bricks_slab" [116, 67, 53, 255]
+                    5  -> BlockInfo True "stone_brick_slab" [75, 75, 75, 255]
+                    6  -> BlockInfo True "nether_brick_slab" [41, 21, 25, 255]
+                    7  -> BlockInfo True "quartz_slab" [148, 147, 143, 255]
+                    8  -> BlockInfo True "upper_stone_slab" [160, 160, 160, 255]
+                    9  -> BlockInfo True "upper_sandstone_slab" [141, 136, 107, 255]
+                    10 -> BlockInfo False "upper_(stone)_slab" [160, 160, 160, 255]
+                    11 -> BlockInfo True "upper_cobblestone_slab" [135, 135, 135, 255]
+                    12 -> BlockInfo True "upper_bricks_slab" [116, 67, 53, 255]
+                    13 -> BlockInfo True "upper_stone_brick_slab" [75, 75, 75, 255]
+                    14 -> BlockInfo True "upper_nether_brick_slab" [41, 21, 25, 255]
+                    15 -> BlockInfo True "upper_quartz_slab" [148, 147, 143, 255]
+                    _  -> bugBlock
+    )
     ,( 45, \_     -> BlockInfo True "brick_block" [116, 67, 53, 255] )
     ,( 46, \_     -> BlockInfo True "tnt" [82, 25, 10, 255] )
     ,( 47, \_     -> BlockInfo True "bookshelf" [186, 150, 97, 255] )
@@ -150,16 +182,16 @@ blocks = I.fromDistinctAscList
     ,( 93, \_     -> BlockInfo True "unpowered_repeater" [80, 80, 80, 255] )
     ,( 94, \_     -> BlockInfo True "powered_repeater" [80, 80, 80, 255] )
     ,( 95, \i     -> case i of
-                    0 -> BlockInfo True "white_stained_glass" [221, 221, 221, 255]
-                    1 -> BlockInfo True "orange_stained_glass" [219, 125, 62, 255]
-                    2 -> BlockInfo True "magenta_stained_glass" [179, 80, 188, 255]
-                    3 -> BlockInfo True "light_blue_stained_glass" [107, 138, 201, 255]
-                    4 -> BlockInfo True "yellow_stained_glass" [177, 166, 39, 255]
-                    5 -> BlockInfo True "lime_stained_glass" [65, 174, 56, 255]
-                    6 -> BlockInfo True "pink_stained_glass" [208, 132, 153, 255]
-                    7 -> BlockInfo True "gray_stained_glass" [64, 64, 64, 255]
-                    8 -> BlockInfo True "light_gray_stained_glass" [154, 161, 161, 255]
-                    9 -> BlockInfo True "cyan_stained_glass" [46, 110, 137, 255]
+                    0  -> BlockInfo True "white_stained_glass" [221, 221, 221, 255]
+                    1  -> BlockInfo True "orange_stained_glass" [219, 125, 62, 255]
+                    2  -> BlockInfo True "magenta_stained_glass" [179, 80, 188, 255]
+                    3  -> BlockInfo True "light_blue_stained_glass" [107, 138, 201, 255]
+                    4  -> BlockInfo True "yellow_stained_glass" [177, 166, 39, 255]
+                    5  -> BlockInfo True "lime_stained_glass" [65, 174, 56, 255]
+                    6  -> BlockInfo True "pink_stained_glass" [208, 132, 153, 255]
+                    7  -> BlockInfo True "gray_stained_glass" [64, 64, 64, 255]
+                    8  -> BlockInfo True "light_gray_stained_glass" [154, 161, 161, 255]
+                    9  -> BlockInfo True "cyan_stained_glass" [46, 110, 137, 255]
                     10 -> BlockInfo True "purple_stained_glass" [126, 61, 181, 255]
                     11 -> BlockInfo True "blue_stained_glass" [46, 56, 141, 255]
                     12 -> BlockInfo True "brown_stained_glass" [79, 50, 31, 255]
@@ -170,7 +202,13 @@ blocks = I.fromDistinctAscList
     )
     ,( 96, \_     -> BlockInfo True "trapdoor" [186, 150, 97, 255] )
     ,( 97, \_     -> BlockInfo True "monster_egg" [80, 80, 80, 255] )
-    ,( 98, \_     -> BlockInfo True "stonebrick" [75, 75, 75, 255] )
+    ,( 98, \i     -> case i of
+                    0  -> BlockInfo True "stone_brick" [75, 75, 75, 255]
+                    1  -> BlockInfo True "mossy_stone_brick" [75, 75, 75, 255]
+                    2  -> BlockInfo True "cracked_stone_brick" [75, 75, 75, 255]
+                    3  -> BlockInfo True "chiseled_stone_brick" [75, 75, 75, 255]
+                    _ -> bugBlock
+    )
     ,( 99, \_     -> BlockInfo True "brown_mushroom_block" [88, 66, 51, 255] )
     ,( 100, \_     -> BlockInfo True "red_mushroom_block" [112, 17, 16, 255] )
     ,( 101, \_     -> BlockInfo True "iron_bars" [114, 114, 114, 255] )
@@ -197,8 +235,30 @@ blocks = I.fromDistinctAscList
     ,( 122, \_     -> BlockInfo True "dragon_egg" [24, 1, 28, 255] )
     ,( 123, \_     -> BlockInfo True "redstone_lamp" [144, 96, 65, 255] )
     ,( 124, \_     -> BlockInfo True "lit_redstone_lamp" [197, 171, 130, 255] )
-    ,( 125, \_     -> BlockInfo True "double_wooden_slab" [186, 150, 97, 255] )
-    ,( 126, \_     -> BlockInfo True "wooden_slab" [186, 150, 97, 255] )
+    ,( 125, \i     -> case i of
+                    0  -> BlockInfo True "double_oak_wood_slab" [186, 150, 97, 255]
+                    1  -> BlockInfo True "double_spruce_wood_slab" [119, 87, 53, 255]
+                    2  -> BlockInfo True "double_birch_wood_slab" [212, 201, 139, 255]
+                    3  -> BlockInfo True "double_jungle_wood_slab" [113, 79, 52, 255]
+                    4  -> BlockInfo True "double_acacia_wood_slab" [185, 102, 54, 255]
+                    5  -> BlockInfo True "double_dark_oak_wood_slab" [55, 33, 8, 255]
+                    _ -> bugBlock
+    )
+    ,( 126, \i     -> case i of
+                    0  -> BlockInfo True "oak_wood_slab" [186, 150, 97, 255]
+                    1  -> BlockInfo True "spruce_wood_slab" [119, 87, 53, 255]
+                    2  -> BlockInfo True "birch_wood_slab" [212, 201, 139, 255]
+                    3  -> BlockInfo True "jungle_wood_slab" [113, 79, 52, 255]
+                    4  -> BlockInfo True "acacia_wood_slab" [185, 102, 54, 255]
+                    5  -> BlockInfo True "dark_oak_wood_slab" [55, 33, 8, 255]
+                    8  -> BlockInfo True "upper_oak_wood_slab" [186, 150, 97, 255]
+                    9  -> BlockInfo True "upper_spruce_wood_slab" [119, 87, 53, 255]
+                    10 -> BlockInfo True "upper_birch_wood_slab" [212, 201, 139, 255]
+                    11 -> BlockInfo True "upper_jungle_wood_slab" [113, 79, 52, 255]
+                    12 -> BlockInfo True "upper_acacia_wood_slab" [185, 102, 54, 255]
+                    13 -> BlockInfo True "upper_dark_oak_wood_slab" [55, 33, 8, 255]
+                    _ -> bugBlock
+    )
     ,( 127, \_     -> BlockInfo True "cocoa" [178, 116, 59, 255] )
     ,( 128, \_     -> BlockInfo True "sandstone_stairs" [141, 136, 107, 255] )
     ,( 129, \_     -> BlockInfo True "emerald_ore" [47, 130, 78, 255] )
@@ -312,7 +372,11 @@ blocks = I.fromDistinctAscList
     ,( 179, \_     -> BlockInfo True "red_sandstone" [157, 80, 28, 255] )
     ,( 180, \_     -> BlockInfo True "red_sandstone_stairs" [157, 80, 28, 255] )
     ,( 181, \_     -> BlockInfo True "double_stone_slab2" [157, 80, 28, 255] )
-    ,( 182, \_     -> BlockInfo True "stone_slab2" [157, 80, 28, 255] )
+    ,( 182, \i     -> case i of
+                    0 -> BlockInfo True "red_sandstone_slab" [157, 80, 28, 255]
+                    1 -> BlockInfo True "upper_red_sandstone_slab" [157, 80, 28, 255]
+                    _ -> bugBlock
+    )
     ,( 183, \_     -> BlockInfo True "spruce_fence_gate" [119, 87, 53, 255] )
     ,( 184, \_     -> BlockInfo True "birch_fence_gate" [212, 201, 139, 255] )
     ,( 185, \_     -> BlockInfo True "jungle_fence_gate" [113, 79, 52, 255] )
