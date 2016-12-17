@@ -15,7 +15,6 @@ import System.IO
 import Data.Word
 import Data.Int
 import Data.List
-import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 import Data.Bits
