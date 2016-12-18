@@ -72,8 +72,8 @@ buildChunk nbt =
         secs    = openList $ fromJust $ navigate ["Level","Sections"] c
         ids     = concatMap ( byteArrayContent.fromJust.navigate ["Blocks"] ) secs
         adds    = concatMap ( splitData.byteArrayContent.fromJust.navigate ["Data"] ) secs
-        x       = fromIntegral (fromIntegral . intContent . fromJust $ navigate ["Level","xPos"] c :: Int32) :: Int
-        z       = fromIntegral (fromIntegral . intContent . fromJust $ navigate ["Level", "zPos"] c :: Int32 ) :: Int
+        x       = fromIntegral (intContent . fromJust $ navigate ["Level","xPos"] c ) :: Int
+        z       = fromIntegral (intContent . fromJust $ navigate ["Level", "zPos"] c ) :: Int
     in
         Chunk x z (make2D 256 $ zip ids adds)
 
@@ -142,5 +142,5 @@ openList _             = []
 byteArrayContent :: Content -> [Word8]
 byteArrayContent (TAGByteArray bs) = bs
 
-intContent :: Content -> Word32
+intContent :: Content -> Int32
 intContent (TAGInt n) = n

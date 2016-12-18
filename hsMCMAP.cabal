@@ -2,7 +2,7 @@ name:                hsMCMap
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.2.0
+version:             0.2.0.0
 
 synopsis:            build map from minecraft region folder
 homepage:            nil
@@ -31,9 +31,8 @@ library
                      , containers ==0.5.*
                      , bytestring ==0.10.*
                      , zlib ==0.6.*
-                     , data-binary-ieee754 ==0.4.*
                      , vector
-                     , binary
+                     , binary >= 0.8.4.1
                      , JuicyPixels
                      , primitive
   hs-source-dirs:      src

@@ -6,8 +6,9 @@ module Game.Minecraft.Map.NBT (
         ) where
 
 import           Data.Binary.Get
-import           Data.Binary.IEEE754
-import qualified Data.ByteString.Lazy   as BL
+-- import           Data.Binary.IEEE754
+import qualified Data.ByteString.Lazy as BL
+import           Data.Int
 import           Data.List
 import           Data.Word
 
@@ -22,16 +23,16 @@ data NBT = NBT { nameNBT    :: Name
 
 data Content = TAGEnd                      -- 0
     | TAGByte          Word8               -- 1
-    | TAGShort         Word16              -- 2
-    | TAGInt           Word32              -- 3
-    | TAGLong          Word64              -- 4
+    | TAGShort         Int16              -- 2
+    | TAGInt           Int32              -- 3
+    | TAGLong          Int64              -- 4
     | TAGFloat         Float               -- 5
     | TAGDouble        Double              -- 6
     | TAGByteArray    [Word8]             -- 7
     | TAGString        BL.ByteString       -- 8
     | TAGList          [Content]           -- 9
     | TAGCompound      [NBT]               --10
-    | TAGIntArray     [Word32]            --11
+    | TAGIntArray     [Int32]            --11
     deriving (Eq,Show)
 
 -- ignore tag id at start(must be 10)
@@ -42,7 +43,7 @@ getNBT = runGet (byte >> nbtGet 10)
 nbtGet :: Word8 -> Get NBT
 nbtGet id = do
     lenName <- short
-    name     <- BL.pack <$> (replicateM . fromIntegral) lenName byte
+    name    <- BL.pack <$> (replicateM . fromIntegral) lenName byte
     content <- tag id
     return ( NBT name content )
 
@@ -72,11 +73,11 @@ tag 11 = do
 
 
 byte    = getWord8
-short   = getWord16be
-int     = getWord32be
-long    = getWord64be
-float   = getFloat32be
-double  = getFloat64be
+short   = getInt16be
+int     = getInt32be
+long    = getInt64be
+float   = getFloatbe
+double  = getDoublebe
 compound :: Get [NBT]
 compound = do
     id <- byte
