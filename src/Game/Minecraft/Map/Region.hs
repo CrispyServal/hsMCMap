@@ -33,7 +33,7 @@ headGet = do
     return $ Header l t
 
 location = getInt32be
-timeStamp = getInt32be -- will be ignore
+timeStamp = getInt32be
 
 --offset in byte from start of file
 getLocation :: Header -> [(Int,Int)]
@@ -54,8 +54,6 @@ data ChunkRaw = ChunkRaw {
                     , chunkRawRawNBT :: BL.ByteString
                     } deriving Show
 
--- getRawNBT :: ChunkRaw -> BL.ByteString
--- getRawNBT (ChunkRaw _ _ b) = b
 
 chunkGet :: Get ChunkRaw
 chunkGet = do
