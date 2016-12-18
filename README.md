@@ -21,5 +21,6 @@ cabal build
 
 ``` bash
 # replace 2 with the number of cores of your PC
-./main YOUR_REGION_DIR OUTPUT.png + RTS -N2
+# 255 is default value for y_slicing height
+./main YOUR_REGION_DIR OUTPUT.png [Y_SLICING_HEIGHT] + RTS -N2
 ```
