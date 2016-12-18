@@ -24,8 +24,10 @@ Flag Debug
     Default:     False
 
 library
-  exposed-modules:     Game.Minecraft.Map, Game.Minecraft.Map.NBT, Game.Minecraft.Map.Region
-  other-modules:       Game.Minecraft.Map.Block
+  exposed-modules:     Game.Minecraft.Map
+                     , Game.Minecraft.Map.NBT
+                     , Game.Minecraft.Map.Region
+                     , Game.Minecraft.Map.Block
   build-depends:       base ==4.*
                      , directory ==1.2.*
                      , containers ==0.5.*
