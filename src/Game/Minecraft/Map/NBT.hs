@@ -68,7 +68,7 @@ tag 10 = TAGCompound       <$> compound
 --tag 10 = fmap TAGCompound    $! compound
 tag 11 = do
     len <- int
-    TAGIntArray           <$> (replicateM . fromIntegral) len int
+    TAGIntArray            <$> (replicateM . fromIntegral) len int
 
 
 byte    = getWord8
