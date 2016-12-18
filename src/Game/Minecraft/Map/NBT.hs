@@ -5,14 +5,12 @@ module Game.Minecraft.Map.NBT (
           , navigate
         ) where
 
-import qualified Codec.Compression.Zlib as Z
 import           Data.Binary.Get
 import           Data.Binary.IEEE754
 import qualified Data.ByteString.Lazy   as BL
 import           Data.List
 import           Data.Word
 
-import           Control.Applicative
 import           Control.Monad
 
 -- data
@@ -38,7 +36,7 @@ data Content = TAGEnd                      -- 0
 
 -- ignore tag id at start(must be 10)
 getNBT :: BL.ByteString -> NBT
-getNBT bs = runGet (byte >> nbtGet 10) (Z.decompress bs)
+getNBT = runGet (byte >> nbtGet 10)
 
 -- NOTE: no id parsing here. will be in compound and in start(getNBT)
 nbtGet :: Word8 -> Get NBT

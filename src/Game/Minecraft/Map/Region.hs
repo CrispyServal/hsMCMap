@@ -6,6 +6,7 @@ module Game.Minecraft.Map.Region(
 import           Game.Minecraft.Map.NBT
 
 import qualified Codec.Compression.GZip as G
+import qualified Codec.Compression.Zlib as Z
 import           Data.Binary.Get
 import           Data.Bits
 import qualified Data.ByteString        as B
@@ -45,7 +46,7 @@ mapTuple2 f (x,y) = (f x, f y)
 
 
 -- raw chunk data: without parse its nbt
--- ChunkRaw length type_of_compression data(compressed NBT)
+-- ChunkRaw length type_of_compression data(decompressed NBT in binary)
 data ChunkRaw = ChunkRaw {
                       chunkRawLen    :: Word32
                     , chunkRawTypeC  :: Word8
@@ -60,7 +61,7 @@ chunkGet = do
     len <- getWord32be
     t     <- getWord8
     bs     <- getLazyByteString $ fromIntegral (len-1)
-    return $ ChunkRaw len t bs
+    return $ ChunkRaw len t $ Z.decompress bs
 
 -- from whole ByteString to [ChunkRaw]
 getChunkRaws :: BL.ByteString -> [ChunkRaw]

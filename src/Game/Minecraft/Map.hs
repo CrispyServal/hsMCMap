@@ -1,8 +1,13 @@
 {-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 module Game.Minecraft.Map (
-          loadRegionsP
+          Chunk(..)
+        , ChunkTop(..)
+        -- high level functions to build a top view
+        , loadRegionsP
         , buildImage
         , buildAndWritePng
+        -- general functions for future use
+        , buildChunk
         )where
 
 import Game.Minecraft.Map.NBT
@@ -47,8 +52,8 @@ make2D y xs = Data.List.take y xs : make2D y (Data.List.drop y xs)
 allDraw :: [(Word8,Word8)] -> Bool
 allDraw = all ifDraw
 
-toTopView :: Chunk -> ChunkTop
-toTopView (Chunk x z bs) = ChunkTop x z (myFoldl' ref e $ reverse bs) where
+toTopView :: Int -> Chunk -> ChunkTop
+toTopView h (Chunk x z bs) = ChunkTop x z (myFoldl' ref e $ reverse $ take h bs) where
     e = replicate 256 (0x00,0x00)
     myFoldl' f e [] = e
     myFoldl' f e (x:xs)
@@ -77,8 +82,8 @@ splitData :: [Word8] -> [Word8]
 splitData = concatMap sp where
     sp w = [w `shiftR` 4 , w .&. 0x0F]
 
-loadRegionsP :: String -> IO [ChunkTop]
-loadRegionsP path = do
+loadRegionsP :: Int -> String -> IO [ChunkTop]
+loadRegionsP h path = do
     rFiles <- filter (isSuffixOf "mca") <$> listDirectory path
     contents <- mapM (BL.readFile .((path ++ "/") ++ )) rFiles
     let numCon = length contents
@@ -87,7 +92,7 @@ loadRegionsP path = do
     reduce chTsChan numCon []
         where
             fromOneFile content outChan = do
-                let chTs = map (toTopView . buildChunk . getNBT . chunkRawRawNBT) (getChunkRaws content)
+                let chTs = map (toTopView h . buildChunk . getNBT . chunkRawRawNBT) (getChunkRaws content)
                 writeChan outChan chTs
             reduce inChan n nowResult
                     | n == 0 = return nowResult
