@@ -1,4 +1,4 @@
-name:                mc-map
+name:                hsMCMap
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
@@ -43,7 +43,7 @@ executable main
   main-is:             Main.hs
   hs-source-dirs:      exc-src
   build-depends:       base == 4.*
-                    ,  mc-map
+                    ,  hsMCMap
   default-language:    Haskell2010
   GHC-Options:         -Wall -O2 -rtsopts -threaded -auto-all -caf-all -fforce-recomp -with-rtsopts=-H
   if flag(debug)
