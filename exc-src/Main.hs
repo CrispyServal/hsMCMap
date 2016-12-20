@@ -6,7 +6,7 @@ import           System.Exit
 showHelp :: IO ()
 showHelp = do
     progName <- getProgName
-    die $ "Usage: " ++ progName ++ " INPUT_REGION_DIR OUTPUT.png"
+    die $ "Usage: " ++ progName ++ " INPUT_REGION_DIR OUTPUT.png [Y_SLICING_HEIHGT]"
 
 buildAndSave :: FilePath -> FilePath -> Int -> IO ()
 buildAndSave inDir outDir h = do
